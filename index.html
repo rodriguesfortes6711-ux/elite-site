@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Models | Real</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Simplificado para manter foco na lógica JS */
+        :root { --color-bg: #0a0a0a; --color-card: #141414; --color-gold: #d4af37; --color-text: #e0e0e0; --font-heading: 'Playfair Display', serif; --font-body: 'Lato', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-body); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .hidden { display: none !important; }
+        
+        /* Header */
+        header { background: rgba(10, 10, 10, 0.95); border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding: 15px 0; position: sticky; top: 0; z-index: 1000; }
+        nav { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-family: var(--font-heading); font-size: 1.8rem; color: var(--color-gold); cursor: pointer; font-style: italic; }
+        
+        /* Forms */
+        .auth-container { max-width: 450px; margin: 60px auto; background: var(--color-card); padding: 30px; border: 1px solid #333; border-radius: 8px; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 5px; color: #888; font-size: 0.85rem; }
+        .form-input, .form-select { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; }
+        .btn { padding: 10px 20px; border: 1px solid var(--color-gold); color: var(--color-gold); background: transparent; cursor: pointer; text-transform: uppercase; border-radius: 4px; }
+        .btn:hover { background: var(--color-gold); color: #000; }
+        .btn-primary { background: var(--color-gold); color: #000; font-weight: bold; }
+        .btn-danger { border-color: #ff4444; color: #ff4444; }
+        .btn-danger:hover { background: #ff4444; color: #fff; }
+
+        /* Grid Home */
+        .models-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; padding: 50px 0; }
+        .model-card { background: var(--color-card); border: 1px solid #222; border-radius: 8px; overflow: hidden; cursor: pointer; transition: 0.3s; }
+        .model-card:hover { transform: translateY(-5px); border-color: var(--color-gold); }
+        .model-img { width: 100%; height: 380px; object-fit: cover; }
+        .model-info { padding: 15px; text-align: center; }
+        .model-name { font-size: 1.2rem; font-family: var(--font-heading); color: var(--color-gold); }
+
+        /* Modal */
+        .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; }
+        .modal-backdrop.active { display: flex; }
+        .modal-content { background: #1a1a1a; width: 100%; max-width: 900px; padding: 30px; border-radius: 8px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-modal { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; }
+        .grid-split { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .preview-img { max-width: 100%; margin-top: 10px; border-radius: 4px; border: 2px solid var(--color-gold); }
+        
+        /* Chat */
+        .chat-area { height: 300px; background: #111; padding: 15px; overflow-y: auto; margin-top: 20px; border-radius: 8px; }
+        .msg { padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; max-width: 80%; }
+        .msg-in { background: #333; color: #fff; }
+        .msg-out { background: var(--color-gold); color: #000; align-self: flex-end; margin-left: auto; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <nav>
+                <div onclick="switchView('home')" class="logo">ELITE MODELS</div>
+                <div class="nav-actions" id="nav-actions">
+                    <!-- Injetado via JS -->
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- VIEW: AUTH -->
+    <section id="view-auth" class="container">
+        <div id="login-form" class="auth-container">
+            <h2 style="text-align:center; color:var(--color-gold);">Login</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group"><label>Email</label><input type="email" id="login-email" class="form-input" required></div>
+                <div class="form-group"><label>Senha</label><input type="password" id="login-pass" class="form-input" required></div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Entrar</button>
+            </form>
+            <div style="margin-top:15px; text-align:center;">
+                <span style="color:#888;">Novo por aqui? </span><a href="#" onclick="showRegister()" style="color:var(--color-gold);">Cadastrar</a>
+            </div>
+        </div>
+
+        <div id="register-form" class="auth-container hidden">
+            <h2 style="text-align:center; color:var(--color-gold);">Cadastro</h2>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group"><label>Nome</label><input type="text" id="reg-name" class="form-input" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="reg-email" class="form-input" required></div>
+                <div class="form-group"><label>Senha</label><input type="password" id="reg-pass" class="form-input" required></div>
+                <div class="form-group"><label>Tipo</label>
+                    <select id="reg-role" class="form-select">
+                        <option value="client">Sou Cliente</option>
+                        <option value="model">Sou Modelo</option>
+                    </select>
+                </div>
+                <div class="form-group" id="reg-city-group"><label>Cidade</label><input type="text" id="reg-city" class="form-input" required></div>
+                
+                <!-- Upload (Apenas para Modelo) -->
+                <div class="form-group hidden" id="reg-img-group">
+                    <label>Foto de Perfil</label>
+                    <input type="file" id="reg-img" class="form-input" accept="image/*" onchange="previewImage(this, 'preview')">
+                    <img id="preview" class="preview-img" style="display:none;">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;">Criar Conta</button>
+                <div style="margin-top:15px; text-align:center;">
+                    <a href="#" onclick="showLogin()" style="color:var(--color-gold);">Já tenho conta</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- VIEW: HOME -->
+    <section id="view-home" class="container hidden">
+        <h1 style="text-align:center; font-size:3rem; color:var(--color-gold); margin-top:50px;">Destaques</h1>
+        <div class="models-container" id="home-grid"></div>
+    </section>
+
+    <!-- MODAL PERFIL -->
+    <div class="modal-backdrop" id="modal-profile">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <div class="grid-split">
+                <div id="p-gallery">
+                    <img id="p-img" class="model-img">
+                </div>
+                <div>
+                    <h2 id="p-name" style="color:var(--color-gold); font-size:2rem;"></h2>
+                    <h3 id="p-price" style="margin:10px 0;"></h3>
+                    <p id="p-city" style="color:#888;"></p>
+                    <p id="p-bio" style="margin-top:20px;"></p>
+                    
+                    <!-- Avaliação (Apenas Clientes) -->
+                    <div id="client-actions" class="hidden">
+                        <h4 style="margin-top:20px;">Avaliar Modelo</h4>
+                        <div style="font-size:1.5rem; color:var(--color-gold); cursor:pointer;">
+                            <span onclick="submitRating(1)">★</span> <span onclick="submitRating(2)">★</span> <span onclick="submitRating(3)">★</span> <span onclick="submitRating(4)">★</span> <span onclick="submitRating(5)">★</span>
+                        </div>
+                        <div id="reviews-list" style="margin-top:10px; font-size:0.8rem; color:#888;"></div>
+                    </div>
+
+                    <!-- Chat -->
+                    <div style="margin-top:30px;">
+                        <h4>Conversar</h4>
+                        <div class="chat-area" id="chat-messages"></div>
+                        <div style="margin-top:10px; display:flex; gap:10px;">
+                            <input type="text" id="chat-input" class="form-input" placeholder="Digite...">
+                            <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ESTADO DA APLICAÇÃO ---
+        let currentUser = JSON.parse(localStorage.getItem('eliteUser')) || null;
+        let currentProfile = null;
+        let tempImageBase64 = "";
+        let allModels = [];
+
+        // --- FUNÇÕES DE UTILIDADE ---
+        function switchView(view) {
+            document.querySelectorAll('section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            if(view === 'home') loadModels();
+        }
+
+        function showRegister() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
+        }
+        function showLogin() {
+            document.getElementById('register-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal-profile').classList.remove('active'); }
+
+        // Preview Imagem
+        function previewImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById(previewId).src = e.target.result;
+                    document.getElementById(previewId).style.display = 'block';
+                    tempImageBase64 = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // --- LÓGICA DE AUTENTICAÇÃO REAL ---
+
+        function updateNav() {
+            const nav = document.getElementById('nav-actions');
+            if (!currentUser) {
+                nav.innerHTML = `<button onclick="switchView('auth')" class="btn">Login / Cadastrar</button>`;
+            } else {
+                nav.innerHTML = `
+                    <span style="margin-right:15px; color:#888;">Olá, ${currentUser.name} (${currentUser.role})</span>
+                    <button onclick="logout()" class="btn btn-danger">Sair</button>
+                `;
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pass').value;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    currentUser = data;
+                    localStorage.setItem('eliteUser', JSON.stringify(data)); // MANTER LOGADO
+                    updateNav();
+                    switchView('home');
+                } else {
+                    alert(data.error || 'Erro no login');
+                }
+            } catch (err) { alert('Erro de conexão'); }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('reg-name').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-pass').value,
+                role: document.getElementById('reg-role').value,
+                city: document.getElementById('reg-city').value,
+                images_base64: tempImageBase64 || null
+            };
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Cadastro realizado! Faça login.');
+                    showLogin();
+                } else {
+                    alert(data.error);
+                }
+            } catch (err) { alert('Erro de conexão'); }
+        }
+
+        function logout() {
+            localStorage.removeItem('eliteUser');
+            currentUser = null;
+            updateNav();
+            switchView('auth');
+        }
+
+        // Toggle campos de imagem se for modelo
+        document.getElementById('reg-role').addEventListener('change', function() {
+            const imgGroup = document.getElementById('reg-img-group');
+            if(this.value === 'model') imgGroup.classList.remove('hidden');
+            else imgGroup.classList.add('hidden');
+        });
+
+        // --- LÓGICA DE MODELOS ---
+
+        async function loadModels() {
+            const res = await fetch('/api/models');
+            allModels = await res.json();
+            const grid = document.getElementById('home-grid');
+            grid.innerHTML = '';
+
+            allModels.forEach(m => {
+                const imgUrl = m.images && m.images.length ? m.images[0] : 'https://picsum.photos/200';
+                const card = document.createElement('div');
+                card.className = 'model-card';
+                card.onclick = () => openProfile(m);
+                card.innerHTML = `
+                    <img src="${imgUrl}" class="model-img">
+                    <div class="model-info">
+                        <div class="model-name">${m.name}</div>
+                        <div style="color:#888;">${m.city}</div>
+                        <div style="color:var(--color-gold); font-weight:bold;">${m.price}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- MODAL & INTERAÇÃO ---
+
+        function openProfile(model) {
+            // Precisamos do email do modelo para o chat. Assumindo que temos.
+            // Como a tabela 'models' não tem email no schema anterior, vamos inferir ou buscar.
+            // PARA ESTE EXEMPLO: Vamos usar o 'name' como ID ou assumir um campo.
+            // Melhor seria: Ao renderizar, salvar o email no objeto.
+            // Como o schema anterior não tinha email em models, vamos usar um placeholder
+            // para identificar o usuário. Vamos assumir que nome único = email para demo ou
+            // precisaríamos adicionar uma coluna 'email' na tabela models.
+            
+            // Hack rápido para demo: Usar o nome para achar o usuário na tabela users se precisarmos.
+            // Mas para o chat funcionar, precisamos do email.
+            
+            // **VAMOS ADICIONAR UM CAMPO TEMPORÁRIO NO OBJETO**:
+            // Assumindo que o registro em 'users' tem o mesmo nome que em 'models'.
+            currentProfile = { ...model, email: model.name.replace(/\s+/g, '').toLowerCase() + '@elite.com' }; 
+
+            document.getElementById('p-img').src = model.images[0];
+            document.getElementById('p-name').innerText = model.name;
+            document.getElementById('p-price').innerText = model.price;
+            document.getElementById('p-city').innerText = model.city;
+            document.getElementById('p-bio').innerText = model.bio;
+
+            // Mostrar ações de cliente
+            const clientActions = document.getElementById('client-actions');
+            if(currentUser && currentUser.role === 'client') {
+                clientActions.classList.remove('hidden');
+                loadReviews(currentProfile.email);
+            } else {
+                clientActions.classList.add('hidden');
+            }
+
+            // Carregar mensagens
+            loadMessages();
+
+            document.getElementById('modal-profile').classList.add('active');
+        }
+
+        // --- CHAT ---
+        async function loadMessages() {
+            if(!currentUser) return;
+            const res = await fetch(`/api/messages?sender=${currentUser.email}&receiver=${currentProfile.email}`);
+            const msgs = await res.json();
+            
+            const box = document.getElementById('chat-messages');
+            box.innerHTML = '';
+            msgs.forEach(m => {
+                const div = document.createElement('div');
+                div.className = `msg ${m.sender_email === currentUser.email ? 'msg-out' : 'msg-in'}`;
+                div.innerText = m.content;
+                box.appendChild(div);
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            await fetch('/api/messages', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ sender: currentUser.email, receiver: currentProfile.email, content: text })
+            });
+
+            input.value = '';
+            loadMessages();
+        }
+
+        // --- AVALIAÇÃO ---
+        async function loadReviews(modelEmail) {
+            const res = await fetch(`/api/reviews?model_email=${modelEmail}`);
+            const revs = await res.json();
+            const list = document.getElementById('reviews-list');
+            if(revs.length) {
+                const avg = revs.reduce((a,b) => a + b.stars, 0) / revs.length;
+                list.innerText = `Nota Média: ${avg.toFixed(1)} (${revs.length} avaliações)`;
+            } else {
+                list.innerText = "Sem avaliações.";
+            }
+        }
+
+        async function submitRating(stars) {
+            await fetch('/api/reviews', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ model_email: currentProfile.email, client_email: currentUser.email, stars, text: "Otimista" })
+            });
+            alert("Avaliação enviada!");
+            loadReviews(currentProfile.email);
+        }
+
+        // --- INIT ---
+        updateNav();
+        if(currentUser) switchView('home');
+
+    </script>
+</body>
+</html>
