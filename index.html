@@ -1,20 +1,288 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>Teste Render</title>
+    <meta charset="UTF-8">
+    <title>Elite Models</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0a0a0a; --card: #141414; --gold: #d4af37; --text: #e0e0e0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: Arial, sans-serif; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .hidden { display: none !important; }
+        header { background: #111; padding: 15px 0; border-bottom: 1px solid #333; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { color: var(--gold); font-size: 1.5rem; font-style: italic; cursor: pointer; }
+        .btn { padding: 10px 20px; border: 1px solid var(--gold); color: var(--gold); background: transparent; cursor: pointer; border-radius: 4px; }
+        .btn:hover { background: var(--gold); color: #000; }
+        .btn-danger { border-color: #f00; color: #f00; }
+        .btn-primary { background: var(--gold); color: #000; font-weight: bold; }
+        .auth-box { max-width: 400px; margin: 50px auto; background: var(--card); padding: 30px; border-radius: 8px; border: 1px solid #333; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 5px; color: #888; font-size: 0.9rem; }
+        .form-input, .form-select { width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: var(--card); border: 1px solid #222; border-radius: 8px; overflow: hidden; cursor: pointer; transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); border-color: var(--gold); }
+        .card img { width: 100%; height: 300px; object-fit: cover; }
+        .card-info { padding: 15px; text-align: center; }
+        .card-name { color: var(--gold); font-size: 1.2rem; margin-bottom: 5px; }
+        
+        /* Modal */
+        .modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-bg.active { display: flex; }
+        .modal { background: #1a1a1a; padding: 30px; border-radius: 8px; width: 100%; max-width: 800px; position: relative; }
+        .close { position: absolute; top: 10px; right: 20px; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        .chat-box { height: 200px; background: #111; padding: 10px; overflow-y: auto; margin-top: 20px; border-radius: 8px; }
+        .msg { padding: 8px; margin-bottom: 5px; border-radius: 5px; max-width: 80%; }
+        .msg-in { background: #333; color: #fff; }
+        .msg-out { background: var(--gold); color: #000; margin-left: auto; }
+    </style>
 </head>
-<body style="background: #111; color: white; text-align: center; margin-top: 20%;">
-    <h1>Deu certo! O Render está servindo o site.</h1>
-    <button onclick="testarAPI()" style="padding: 15px; font-size: 18px; cursor: pointer; margin-top: 20px;">Testar Conexão com Neon</button>
-    <p id="resultado" style="margin-top: 20px; color: #d4af37;"></p>
+<body>
+
+    <header>
+        <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="logo" onclick="showView('home')">ELITE MODELS</div>
+            <div id="nav-menu"></div>
+        </div>
+    </header>
+
+    <!-- AUTH -->
+    <div id="view-auth" class="container">
+        <div id="login-box" class="auth-box">
+            <h2 style="color:var(--gold); text-align:center; margin-bottom:20px;">Login</h2>
+            <form onsubmit="doLogin(event)">
+                <div class="form-group"><label>Email</label><input type="email" id="l-email" class="form-input" required></div>
+                <div class="form-group"><label>Senha</label><input type="password" id="l-pass" class="form-input" required></div>
+                <button type="submit" class="btn btn-primary" style="width:100%">Entrar</button>
+            </form>
+            <p style="text-align:center; margin-top:15px; font-size:0.9rem;">Não tem conta? <a href="#" onclick="toggleAuth()" style="color:var(--gold);">Cadastrar</a></p>
+        </div>
+
+        <div id="register-box" class="auth-box hidden">
+            <h2 style="color:var(--gold); text-align:center; margin-bottom:20px;">Cadastro</h2>
+            <form onsubmit="doRegister(event)">
+                <div class="form-group"><label>Nome</label><input type="text" id="r-name" class="form-input" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="r-email" class="form-input" required></div>
+                <div class="form-group"><label>Senha</label><input type="password" id="r-pass" class="form-input" required></div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="r-role" class="form-select" onchange="document.getElementById('r-img-group').classList.toggle('hidden', this.value !== 'model')">
+                        <option value="client">Cliente</option>
+                        <option value="model">Modelo</option>
+                    </select>
+                </div>
+                <div class="form-group hidden" id="r-img-group"><label>Foto (Modelo)</label><input type="file" id="r-img" class="form-input" accept="image/*" onchange="preview(this)"><img id="preview-img" style="width:100px; margin-top:10px; display:none;"></div>
+                <button type="submit" class="btn btn-primary" style="width:100%">Criar Conta</button>
+            </form>
+            <p style="text-align:center; margin-top:15px; font-size:0.9rem;"><a href="#" onclick="toggleAuth()" style="color:var(--gold);">Já tenho conta</a></p>
+        </div>
+    </div>
+
+    <!-- HOME -->
+    <div id="view-home" class="container hidden">
+        <h2 style="color:var(--gold); text-align:center; margin-bottom:30px;">Modelos Cadastradas</h2>
+        <div class="grid" id="models-grid"></div>
+    </div>
+
+    <!-- MODAL PERFIL -->
+    <div class="modal-bg" id="modal">
+        <div class="modal">
+            <button class="close" onclick="document.getElementById('modal').classList.remove('active')">&times;</button>
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                    <img id="m-img" style="width:100%; border-radius:8px;">
+                    <div style="margin-top:10px; color:var(--gold); font-size:1.2rem; text-align:center;" id="m-stars"></div>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <h2 id="m-name" style="color:var(--gold);"></h2>
+                    <h3 id="m-price" style="margin:10px 0;"></h3>
+                    <p id="m-bio" style="color:#888; line-height:1.5;"></p>
+                    
+                    <div id="client-area" class="hidden" style="margin-top:20px; border-top:1px solid #333; padding-top:20px;">
+                        <h4>Avaliar (1 a 5 Estrelas)</h4>
+                        <span style="font-size:1.5rem; cursor:pointer; color:var(--gold);" onclick="sendReview(1)">★</span>
+                        <span style="font-size:1.5rem; cursor:pointer; color:var(--gold);" onclick="sendReview(2)">★</span>
+                        <span style="font-size:1.5rem; cursor:pointer; color:var(--gold);" onclick="sendReview(3)">★</span>
+                        <span style="font-size:1.5rem; cursor:pointer; color:var(--gold);" onclick="sendReview(4)">★</span>
+                        <span style="font-size:1.5rem; cursor:pointer; color:var(--gold);" onclick="sendReview(5)">★</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:30px;">
+                <h4>Chat</h4>
+                <div class="chat-box" id="chat-msgs"></div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <input type="text" id="chat-inp" class="form-input" placeholder="Mensagem...">
+                    <button class="btn btn-primary" onclick="sendMsg()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        async function testarAPI() {
-            document.getElementById('resultado').innerText = "Carregando...";
-            const res = await fetch('/api/test-db');
-            const data = await res.json();
-            document.getElementById('resultado').innerText = JSON.stringify(data);
+        let user = JSON.parse(localStorage.getItem('user')) || null;
+        let currentModel = null;
+        let imgBase64 = "";
+
+        function showView(v) {
+            document.getElementById('view-auth').classList.toggle('hidden', v !== 'auth');
+            document.getElementById('view-home').classList.toggle('hidden', v !== 'home');
+            if(v === 'home') loadModels();
         }
+
+        function toggleAuth() {
+            document.getElementById('login-box').classList.toggle('hidden');
+            document.getElementById('register-box').classList.toggle('hidden');
+        }
+
+        function updateNav() {
+            const nav = document.getElementById('nav-menu');
+            if (!user) {
+                nav.innerHTML = '<button class="btn" onclick="showView(\'auth\')">Entrar</button>';
+            } else {
+                nav.innerHTML = `<span>Olá, ${user.name}</span> <button class="btn btn-danger" onclick="logout()">Sair</button>`;
+            }
+        }
+
+        function preview(inp) {
+            if (inp.files[0]) {
+                const r = new FileReader();
+                r.onload = e => {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('preview-img').style.display = 'block';
+                    imgBase64 = e.target.result;
+                };
+                r.readAsDataURL(inp.files[0]);
+            }
+        }
+
+        async function doLogin(e) {
+            e.preventDefault();
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email: document.getElementById('l-email').value, password: document.getElementById('l-pass').value })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                user = data;
+                localStorage.setItem('user', JSON.stringify(data));
+                updateNav();
+                showView('home');
+            } else { alert(data.error); }
+        }
+
+        async function doRegister(e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('r-name').value,
+                email: document.getElementById('r-email').value,
+                password: document.getElementById('r-pass').value,
+                role: document.getElementById('r-role').value,
+                city: 'São Paulo',
+                images_base64: imgBase64 ? imgBase64.split(',')[1] : null
+            };
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Cadastro realizado! Faça login.');
+                toggleAuth();
+            } else { alert(data.error); }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            user = null;
+            updateNav();
+            showView('auth');
+        }
+
+        async function loadModels() {
+            const res = await fetch('/api/models');
+            const models = await res.json();
+            const grid = document.getElementById('models-grid');
+            grid.innerHTML = '';
+            models.forEach(m => {
+                const img = m.images && m.images.length > 0 ? m.images[0] : 'https://via.placeholder.com/400';
+                grid.innerHTML += `
+                    <div class="card" onclick='openModal(${JSON.stringify(m)})'>
+                        <img src="${img}">
+                        <div class="card-info">
+                            <div class="card-name">${m.name}</div>
+                            <div style="color:#888;">${m.city}</div>
+                            <div style="color:var(--gold);">${m.price}</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function openModal(m) {
+            currentModel = m;
+            document.getElementById('m-img').src = m.images[0] || 'https://via.placeholder.com/400';
+            document.getElementById('m-name').innerText = m.name;
+            document.getElementById('m-price').innerText = m.price;
+            document.getElementById('m-bio').innerText = m.bio;
+            
+            if (user && user.role === 'client') {
+                document.getElementById('client-area').classList.remove('hidden');
+                loadReviews();
+            } else {
+                document.getElementById('client-area').classList.add('hidden');
+            }
+            loadChat();
+            document.getElementById('modal').classList.add('active');
+        }
+
+        async function loadReviews() {
+            const res = await fetch(`/api/reviews?model_email=${currentModel.name}@elite.com`);
+            const revs = await res.json();
+            const avg = revs.length ? (revs.reduce((a,b) => a + b.stars, 0) / revs.length).toFixed(1) : 0;
+            document.getElementById('m-stars').innerText = `Nota: ${avg} (${revs.length} avaliações)`;
+        }
+
+        async function sendReview(stars) {
+            if(!user) return;
+            await fetch('/api/reviews', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ model_email: currentModel.name+'@elite.com', client_email: user.email, stars, text: 'Bom' })
+            });
+            alert('Avaliado!');
+            loadReviews();
+        }
+
+        async function loadChat() {
+            if(!user) return;
+            const res = await fetch(`/api/messages?sender=${user.email}&receiver=${currentModel.name}@elite.com`);
+            const msgs = await res.json();
+            const box = document.getElementById('chat-msgs');
+            box.innerHTML = '';
+            msgs.forEach(m => {
+                box.innerHTML += `<div class="msg ${m.sender_email === user.email ? 'msg-out' : 'msg-in'}">${m.content}</div>`;
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendMsg() {
+            const inp = document.getElementById('chat-inp');
+            if(!inp.value.trim() || !user) return;
+            await fetch('/api/messages', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ sender: user.email, receiver: currentModel.name+'@elite.com', content: inp.value })
+            });
+            inp.value = '';
+            loadChat();
+        }
+
+        updateNav();
+        if (user) showView('home');
     </script>
 </body>
 </html>
